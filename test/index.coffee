@@ -1,14 +1,16 @@
 should = require('chai').should()
-scapegoat = require('../index')
-escape = scapegoat.escape
-unescape = scapegoat.unescape
+client = require('../index')
+escape = client.escape
+unescape = client.unescape
+getProcessDefinitions = client.getProcessDefinitions
+
 #env = require '../../activiti.coffee'
 
 describe '#escape', ->
 	it 'converts & into &amp;', ->
 		escape('&').should.equal('&amp;')
-  
-describe '#unescape', ->
-	it 'converts &amp; into &', ->
-		unescape('&amp;').should.equal('&')
 
+
+describe '#getProcessDefinitions', ->
+	it 'converts &amp; into &', ->
+		getProcessDefinitions('&amp;').should.equal('&')
