@@ -1,0 +1,26 @@
+{
+  "name": "activiti-client",
+  "version": "0.0.1",
+  "description": "activiti rest client api",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dorissschoi/activiti-client.git"
+  },
+  "author": "dorissschoi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dorissschoi/activiti-client/issues"
+  },
+  "homepage": "https://github.com/dorissschoi/activiti-client#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.1.2"
+  },
+  "dependencies": {
+    "coffee-script": "^1.11.1"
+  }
+}
