@@ -1,9 +1,5 @@
-class activiticlient 
-    
-    starturl: (defId) ->
-		#console.log "runtime/process-instances/" +defId
-		#return "runtime/process-instances/" +defId
-		console.log "runtime/process-instances/" 
-		return "runtime/process-instances/"
-		
-module.exports = activiticlient
+module.exports =
+  escape: (html) ->
+    String(html).replace(/&/g, '&amp;').replace />/g, '&gt;'
+  unescape: (html) ->
+    String(html).replace(/&amp;/g, '&').replace /&gt;/g, '>'

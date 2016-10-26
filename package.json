@@ -1,8 +1,8 @@
 {
   "name": "activiti-client",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "activiti rest client api",
-  "main": "index.js",
+  "main": "node_modules/.bin/coffee index.coffee",
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec"
   },
