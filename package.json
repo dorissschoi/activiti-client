@@ -1,6 +1,6 @@
 {
   "name": "activiti-client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "activiti rest client api",
   "main": "index.js",
   "scripts": {
