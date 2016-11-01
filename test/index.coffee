@@ -1,16 +1,16 @@
-should = require('chai').should()
+_ = require 'lodash'
+assert = require('assert')
+
 client = require('../index')
-escape = client.escape
-unescape = client.unescape
-getProcessDefinitions = client.getProcessDefinitions
+getProcessDefandDeploy = client.getProcessDefandDeploy
 
-#env = require '../../activiti.coffee'
-
-describe '#escape', ->
-	it 'converts & into &amp;', ->
-		escape('&').should.equal('&amp;')
-
-
-describe '#getProcessDefinitions', ->
-	it 'converts &amp; into &', ->
-		getProcessDefinitions('&amp;').should.equal('&')
+describe '#getProcessDefandDeploy', ->
+	it 'Process Definitions and Deploy information list', (done) ->
+		getProcessDefandDeploy 0
+			.then (processdefList) ->
+				console.log "rst: #{JSON.stringify processdefList.count}"
+				assert.equal _.has(processdefList,'count'), true
+		return done()
+		
+		
+		

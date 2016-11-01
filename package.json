@@ -21,6 +21,7 @@
     "mocha": "^3.1.2"
   },
   "dependencies": {
+    "assert": "^1.4.1",
     "bluebird": "^3.4.6",
     "coffee-script": "^1.11.1",
     "lodash": "^4.16.4",
