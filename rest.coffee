@@ -15,3 +15,9 @@ module.exports =
 					return reject err
 				fulfill res
 	
+	post: (url, opts, data) ->
+		new Promise (fulfill, reject) ->
+			http.post url, data, opts, (err, res) ->
+				if err
+					return reject err
+				fulfill res
