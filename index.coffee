@@ -19,13 +19,13 @@ getDiagram = (contentUrl) ->
 			'Content-Type': 'image/png'
 	req 'get', contentUrl, {}, opts
 
-taskFilter = (task, myusername) ->
+taskFilter = (task, username) ->
 	ret = []
 	_.each task.body.data, (record) ->
 		myproc = _.union( 
-			_.where(record.variables, {name: "createdBy", value: myusername}),
-			_.where(record.variables, {name: "ao", value: myusername}),
-			_.where(record.variables, {name: "ro", value: myusername}) 
+			_.where(record.variables, {name: "createdBy", value: username}),
+			_.where(record.variables, {name: "ao", value: username}),
+			_.where(record.variables, {name: "ro", value: username}) 
 		)
 		nextHandler = _.findWhere(record.variables, {name: "nextHandler"})
 		createdAt = _.findWhere(record.variables, {name: "createdAt"})
@@ -70,8 +70,8 @@ module.exports =
 					console.log "err: #{err}"
 					return err
 					
-		list: (startpage) ->
-			req 'get', "#{env.url.processdeflist}&start=#{startpage}"
+		list: (pageno) ->
+			req 'get', "#{env.url.processdeflist}&start=#{pageno}"
 				.then (defList) ->
 					Promise.all _.map defList.body.data, getDeploymentDetail
 					.then (result) ->
@@ -82,7 +82,17 @@ module.exports =
 				.catch (err) ->
 					console.log "err: #{err}"
 					return err
+					
 	instance:
+		completeTask: (taskId, user) ->
+			data =
+				action: 'complete'
+				variables: [{name: 'completedBy', value: user}]
+			req 'post', "#{env.url.runninglist}/#{taskId}", data
+		
+		delete: (procInsId) ->
+			req 'delete', "#{env.url.processinslist}/#{procInsId}"
+		
 		diagram: (procInsId) ->
 			getDiagram "#{env.url.processinslist}/#{procInsId}/diagram"
 				.then (stream) ->
@@ -91,10 +101,10 @@ module.exports =
 					console.log "err: #{err}"
 					return err
 	
-		list: (startpage, loginuser) ->
-			req 'get', "#{env.url.processinslist}?includeProcessVariables=true&start=#{startpage}"
+		list: (pageno, user) ->
+			req 'get', "#{env.url.processinslist}?includeProcessVariables=true&start=#{pageno}"
 				.then (task) ->
-					ret = taskFilter task, loginuser
+					ret = taskFilter task, user.username
 					Promise.all  _.map ret, getInstanceDetail
 					.then (result) ->
 						val =
@@ -105,15 +115,15 @@ module.exports =
 					console.log "err: #{err}"
 					return err
 					
-		start: (processdefID, createdByuser) ->
+		start: (processdefID, user) ->
 			data = 
 				processDefinitionId: processdefID
 				variables: [
 					name: 'createdBy'
-					value: createdByuser.username
+					value: user.username
 				, 
 					name: 'nextHandler'
-					value: createdByuser.username
+					value: user.username
 				,
 					name: 'createdAt'
 					type: 'date'
