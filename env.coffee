@@ -9,6 +9,7 @@ module.exports =
 		queryinslist: "#{serverurl}/query/process-instances"
 		deployment: (id) ->
 			"#{serverurl}/repository/deployments/#{id}"
+		historytask: "#{serverurl}/history/historic-task-instances"	
 			
 	username:	'kermit'
 	password:	'kermit'

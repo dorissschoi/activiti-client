@@ -100,7 +100,18 @@ module.exports =
 				.catch (err) ->
 					console.log "err: #{err}"
 					return err
-	
+					
+		historyTasklist: (pageno, procInsId) ->
+			req 'get', "#{env.url.historytask}?processInstanceId=#{procInsId}&includeProcessVariables=true&start=#{pageno}"
+				.then (result) ->
+					val =
+						count:		result.body.total
+						results:	result.body.data
+					return val
+				.catch (err) ->
+					console.log "err: #{err}"
+					return err
+			
 		list: (pageno, user) ->
 			req 'get', "#{env.url.processinslist}?includeProcessVariables=true&start=#{pageno}"
 				.then (task) ->
@@ -135,4 +146,5 @@ module.exports =
 				.catch (err) ->
 					console.log "err: #{err}"
 					return err
-				     		     
+		
+						     		     
