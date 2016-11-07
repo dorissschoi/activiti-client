@@ -1,5 +1,5 @@
 rest = require('./rest.coffee')
-_ = require 'lodash'
+_ = require 'underscore'
 env = require('./env')
 
 req = (method, url, data, opts) ->
@@ -12,13 +12,21 @@ req = (method, url, data, opts) ->
 			json: true
 	rest[method] url, opts, data
 		
-getDiagram = (contentUrl) ->
+getDiagram = (url) ->
 	opts = 
 		headers:
 			Authorization:	"Basic " + new Buffer("#{env.username}:#{env.password}").toString("base64")
 			'Content-Type': 'image/png'
-	req 'get', contentUrl, {}, opts
+	req 'get', url, {}, opts
 
+getXML = (url) ->
+	opts = 
+		headers:
+			Authorization:	"Basic " + new Buffer("#{env.username}:#{env.password}").toString("base64")
+		parse: 'XML'
+		
+	req 'get', url, {}, opts
+		
 taskFilter = (task, username) ->
 	ret = []
 	_.each task.body.data, (record) ->
@@ -69,9 +77,36 @@ module.exports =
 				.catch (err) ->
 					console.log "err: #{err}"
 					return err
+
+		deployXML: (data) ->
+			opts = 
+				headers:
+					Authorization:	"Basic " + new Buffer("#{env.username}:#{env.password}").toString("base64")
+					'Content-Type': 'multipart/form-data'
+				multipart: true
+						
+			req 'post', "#{env.url.deployment ''}", data, opts
+
+		delDeployment: (deploymentId) ->
+			req 'delete', env.url.deployment deploymentId
+				
 					
+		downloadXML: (deploymentId) ->
+			req 'get', "#{env.url.deployment deploymentId}/resources"
+				.then (processdefList) ->
+					result = _.findWhere(processdefList.body,{type: 'processDefinition'})
+					getXML "#{env.url.deployment data.deploymentId}/resourcedata/#{result.id}"
+				.then (stream) ->
+					return stream.raw
+				.catch (err) ->
+					console.log "err: #{err}"
+					return err
+
+		getID: (depId) ->
+			req 'get', "#{env.url.processdeflist}?deploymentId=#{depId}&sort=id"
+												
 		list: (pageno) ->
-			req 'get', "#{env.url.processdeflist}&start=#{pageno}"
+			req 'get', "#{env.url.processdeflist}?category=http://activiti.org/test&start=#{pageno}"
 				.then (defList) ->
 					Promise.all _.map defList.body.data, getDeploymentDetail
 					.then (result) ->
@@ -89,10 +124,13 @@ module.exports =
 				action: 'complete'
 				variables: [{name: 'completedBy', value: user}]
 			req 'post', "#{env.url.runninglist}/#{taskId}", data
-		
+			
 		delete: (procInsId) ->
 			req 'delete', "#{env.url.processinslist}/#{procInsId}"
 		
+		delhistoryProc: (procInsId) ->
+			req 'delete', "#{env.url.historyproc}/#{procInsId}"
+			
 		diagram: (procInsId) ->
 			getDiagram "#{env.url.processinslist}/#{procInsId}/diagram"
 				.then (stream) ->
@@ -100,7 +138,24 @@ module.exports =
 				.catch (err) ->
 					console.log "err: #{err}"
 					return err
-					
+
+		haveTask: (defId) ->
+			data =
+				processDefinitionId: defId			
+			req 'post', env.url.queryinslist, data
+		
+		historyProclist: (pageno, procInsId) ->
+			req 'get', "#{env.url.historyproc}?includeProcessVariables=true&finished=true&start=#{pageno}"
+				.then (result) ->
+					val =
+						count:		result.body.total
+						results:	result.body.data
+					console.log "val: #{JSON.stringify val}"
+					return val
+				.catch (err) ->
+					console.log "err: #{err}"
+					return err
+
 		historyTasklist: (pageno, procInsId) ->
 			req 'get', "#{env.url.historytask}?processInstanceId=#{procInsId}&includeProcessVariables=true&start=#{pageno}"
 				.then (result) ->
