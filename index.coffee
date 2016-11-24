@@ -1,13 +1,14 @@
 rest = require('./rest.coffee')
 _ = require 'underscore'
-env = require('./env')
+#sails = require('./env.coffee') for test 
+
 
 req = (method, url, data, opts) ->
 	#console.log "url result: #{url}"
 	if _.isUndefined opts
 		opts = 
 			headers:
-				Authorization:	"Basic " + new Buffer("#{env.username}:#{env.password}").toString("base64")
+				Authorization:	"Basic " + new Buffer("#{sails.config.activiti.username}:#{sails.config.activiti.password}").toString("base64")
 				'Content-Type': 'application/json'
 			json: true
 	rest[method] url, opts, data
@@ -15,14 +16,14 @@ req = (method, url, data, opts) ->
 getDiagram = (url) ->
 	opts = 
 		headers:
-			Authorization:	"Basic " + new Buffer("#{env.username}:#{env.password}").toString("base64")
+			Authorization:	"Basic " + new Buffer("#{sails.config.activiti.username}:#{sails.config.activiti.password}").toString("base64")
 			'Content-Type': 'image/png'
 	req 'get', url, {}, opts
 
 getXML = (url) ->
 	opts = 
 		headers:
-			Authorization:	"Basic " + new Buffer("#{env.username}:#{env.password}").toString("base64")
+			Authorization:	"Basic " + new Buffer("#{sails.config.activiti.username}:#{sails.config.activiti.password}").toString("base64")
 		parse: 'XML'
 		
 	req 'get', url, {}, opts
@@ -47,13 +48,13 @@ taskFilter = (task, username) ->
 	return ret
 	
 getDeploymentDetail = (procDef) ->
-	req 'get', env.url.deployment procDef.deploymentId
+	req 'get', sails.config.activiti.url.deployment procDef.deploymentId
 		.then (result) ->
 			procDef.deploymentDetails = result.body
 			return procDef	
 
 getInstanceDetail = (record) ->
-	req 'get', "#{env.url.runninglist}?processInstanceId=#{record.id}"
+	req 'get', "#{sails.config.activiti.url.runninglist}?processInstanceId=#{record.id}"
 		.then (tasks) ->
 			task = tasks.body.data
 			if _.isArray task
@@ -65,48 +66,50 @@ getInstanceDetail = (record) ->
 			return record
 											
 module.exports =
-
+	
+	
 	definition:
 		diagram: (deploymentId) ->	
-			req 'get', "#{env.url.deployment deploymentId}/resources"
+			req 'get', "#{sails.config.activiti.url.deployment deploymentId}/resources"
 				.then (processdefList) ->
 					result = _.findWhere(processdefList.body,{type: 'resource'})
-					getDiagram "#{env.url.deployment deploymentId}/resourcedata/#{result.id}"
+					getDiagram "#{sails.config.activiti.url.deployment deploymentId}/resourcedata/#{result.id}"
 				.then (stream) ->
 					return stream.raw
 				.catch (err) ->
-					console.log "err: #{err}"
+					console.log "def diagram err: #{err}"
 					return err
 
 		deployXML: (data) ->
 			opts = 
 				headers:
-					Authorization:	"Basic " + new Buffer("#{env.username}:#{env.password}").toString("base64")
+					Authorization:	"Basic " + new Buffer("#{sails.config.activiti.username}:#{sails.config.activiti.password}").toString("base64")
 					'Content-Type': 'multipart/form-data'
 				multipart: true
 						
-			req 'post', "#{env.url.deployment ''}", data, opts
+			req 'post', "#{sails.config.activiti.url.deployment ''}", data, opts
 
 		delDeployment: (deploymentId) ->
-			req 'delete', env.url.deployment deploymentId
+			req 'delete', sails.config.activiti.url.deployment deploymentId
 				
 					
 		downloadXML: (deploymentId) ->
-			req 'get', "#{env.url.deployment deploymentId}/resources"
+			req 'get', "#{sails.config.activiti.url.deployment deploymentId}/resources"
 				.then (processdefList) ->
 					result = _.findWhere(processdefList.body,{type: 'processDefinition'})
-					getXML "#{env.url.deployment data.deploymentId}/resourcedata/#{result.id}"
+					getXML "#{sails.config.activiti.url.deployment deploymentId}/resourcedata/#{result.id}"
 				.then (stream) ->
 					return stream.raw
 				.catch (err) ->
-					console.log "err: #{err}"
+					console.log "downloadXML err: #{err}"
 					return err
 
 		getID: (depId) ->
-			req 'get', "#{env.url.processdeflist}?deploymentId=#{depId}&sort=id"
+			req 'get', "#{sails.config.activiti.url.processdeflist}?deploymentId=#{depId}&sort=id"
 												
 		list: (pageno) ->
-			req 'get', "#{env.url.processdeflist}?category=http://activiti.org/test&start=#{pageno}"
+			
+			req 'get', "#{sails.config.activiti.url.processdeflist}?category=http://activiti.org/test&start=#{pageno}"
 				.then (defList) ->
 					Promise.all _.map defList.body.data, getDeploymentDetail
 					.then (result) ->
@@ -115,7 +118,7 @@ module.exports =
 							results:	result
 						return val
 				.catch (err) ->
-					console.log "err: #{err}"
+					console.log "list err: #{err}"
 					return err
 					
 	instance:
@@ -123,52 +126,51 @@ module.exports =
 			data =
 				action: 'complete'
 				variables: [{name: 'completedBy', value: user}]
-			req 'post', "#{env.url.runninglist}/#{taskId}", data
+			req 'post', "#{sails.config.activiti.url.runninglist}/#{taskId}", data
 			
 		delete: (procInsId) ->
-			req 'delete', "#{env.url.processinslist}/#{procInsId}"
+			req 'delete', "#{sails.config.activiti.url.processinslist}/#{procInsId}"
 		
 		delhistoryProc: (procInsId) ->
-			req 'delete', "#{env.url.historyproc}/#{procInsId}"
+			req 'delete', "#{sails.config.activiti.url.historyproc}/#{procInsId}"
 			
 		diagram: (procInsId) ->
-			getDiagram "#{env.url.processinslist}/#{procInsId}/diagram"
+			getDiagram "#{sails.config.activiti.url.processinslist}/#{procInsId}/diagram"
 				.then (stream) ->
 					return stream.raw
 				.catch (err) ->
-					console.log "err: #{err}"
+					console.log "ins diagram err: #{err}"
 					return err
 
 		haveTask: (defId) ->
 			data =
 				processDefinitionId: defId			
-			req 'post', env.url.queryinslist, data
+			req 'post', sails.config.activiti.url.queryinslist, data
 		
 		historyProclist: (pageno, procInsId) ->
-			req 'get', "#{env.url.historyproc}?includeProcessVariables=true&finished=true&start=#{pageno}"
+			req 'get', "#{sails.config.activiti.url.historyproc}?includeProcessVariables=true&finished=true&start=#{pageno}"
 				.then (result) ->
 					val =
 						count:		result.body.total
 						results:	result.body.data
-					console.log "val: #{JSON.stringify val}"
 					return val
 				.catch (err) ->
-					console.log "err: #{err}"
+					console.log "historyProclist err: #{err}"
 					return err
 
 		historyTasklist: (pageno, procInsId) ->
-			req 'get', "#{env.url.historytask}?processInstanceId=#{procInsId}&includeProcessVariables=true&start=#{pageno}"
+			req 'get', "#{sails.config.activiti.url.historytask}?processInstanceId=#{procInsId}&includeProcessVariables=true&start=#{pageno}"
 				.then (result) ->
 					val =
 						count:		result.body.total
 						results:	result.body.data
 					return val
 				.catch (err) ->
-					console.log "err: #{err}"
+					console.log "historyTasklist err: #{err}"
 					return err
 			
 		list: (pageno, user) ->
-			req 'get', "#{env.url.processinslist}?includeProcessVariables=true&start=#{pageno}"
+			req 'get', "#{sails.config.activiti.url.processinslist}?includeProcessVariables=true&start=#{pageno}"
 				.then (task) ->
 					ret = taskFilter task, user.username
 					Promise.all  _.map ret, getInstanceDetail
@@ -178,7 +180,7 @@ module.exports =
 							results:	result
 						return val
 				.catch (err) ->
-					console.log "err: #{err}"
+					console.log "list err: #{err}"
 					return err
 					
 		start: (processdefID, user) ->
@@ -195,11 +197,11 @@ module.exports =
 					type: 'date'
 					value: new Date	
 				]
-			req 'post', env.url.processinslist, data
+			req 'post', sails.config.activiti.url.processinslist, data
 				.then (rst) ->
 					return rst				
 				.catch (err) ->
-					console.log "err: #{err}"
+					console.log "start err: #{err}"
 					return err
 		
 						     		     
