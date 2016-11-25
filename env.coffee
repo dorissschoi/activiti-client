@@ -14,6 +14,6 @@ module.exports =
 				historyproc: "#{serverurl}/history/historic-process-instances"
 			username:	'kermit'
 			password:	'kermit'
-			promise:
-				timeout:	10000 # ms				
+	promise:
+		timeout:	10000 # ms				
 					

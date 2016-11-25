@@ -1,6 +1,6 @@
 {
   "name": "activiti-client",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "activiti rest client api",
   "main": "node_modules/.bin/coffee index.coffee",
   "scripts": {
