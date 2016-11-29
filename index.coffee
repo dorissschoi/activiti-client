@@ -159,7 +159,7 @@ module.exports =
 					return err
 
 		historyTasklist: (pageno, procInsId) ->
-			req 'get', "#{sails.config.activiti.url.historytask}?processInstanceId=#{procInsId}&includeProcessVariables=true&start=#{pageno}"
+			req 'get', "#{sails.config.activiti.url.historytask}?processInstanceId=#{procInsId}&includeTaskLocalVariables=true&includeProcessVariables=true&start=#{pageno}"
 				.then (result) ->
 					val =
 						count:		result.body.total
