@@ -122,10 +122,8 @@ module.exports =
 					return err
 					
 	instance:
-		completeTask: (taskId, user) ->
-			data =
-				action: 'complete'
-				variables: [{name: 'completedBy', value: user}]
+		#complete 
+		update: (taskId, data) ->
 			req 'post', "#{sails.config.activiti.url.runninglist}/#{taskId}", data
 			
 		delete: (procInsId) ->
@@ -182,8 +180,8 @@ module.exports =
 				.catch (err) ->
 					console.log "list err: #{err}"
 					return err
-					
-		start: (processdefID, user) ->
+		#start			
+		create: (processdefID, user) ->
 			data = 
 				processDefinitionId: processdefID
 				variables: [
