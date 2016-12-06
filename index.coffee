@@ -60,7 +60,7 @@ module.exports  = (opts = {}) ->
 	definition:
 
 		read: (deploymentId) ->
-			req 'get', "#{opts.serverurl/repository/deployments/#{deploymentId}/resources"
+			req 'get', "#{opts.serverurl}/repository/deployments/#{deploymentId}/resources"
 				.then (processdefList) ->
 					result = _.findWhere(processdefList.body,{type: 'processDefinition'})
 					getXML "#{opts.serverurl}/repository/deployments/#{deploymentId}/resourcedata/#{result.id}"
