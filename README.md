@@ -22,7 +22,7 @@ activiti = require('../index')(env)
 - activiti.definition.findbyDepId <deploymentId>
 - activiti.definition.getXML <deploymentId>
 - activiti.definition.list <pageno>
-- activiti.instance.create: <processdefinitionId> <user>
+- activiti.instance.create <processdefinitionId> <user>
 - activiti.instance.delete <processInstanceId>
 - activiti.instance.deleteHistory <processInstanceId>
 - activiti.instnace.diagram <processInstanceId>
@@ -33,7 +33,7 @@ activiti = require('../index')(env)
 ```
 --data
 "action" : "complete"
-"variables" : []
+"variables" : [{name: '', value: ''}]
 ```
 - activiti.task.listHistory <instanceId> <pageno>
 			
