@@ -30,7 +30,7 @@ activiti = require('../index')(env)
 - activiti.instance.list *user* *pageno*
 - activiti.instance.listHistory *pageno*
 - activiti.task.update *TaskId* *data*
-> **data**: 
+ 
 ```
 "action" : "complete"
 "variables" : []
