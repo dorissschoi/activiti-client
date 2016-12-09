@@ -1,9 +1,5 @@
 http = require 'needle'
 Promise = require 'bluebird'
-env = require './env.coffee'
-
-options = 
-	timeout:	env.promise.timeout
 	
 module.exports =
 				

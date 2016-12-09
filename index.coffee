@@ -3,7 +3,7 @@ _ = require 'underscore'
 					
 module.exports  = (opts = {}) ->	
 	req = (method, url, data, headeropts) ->
-		console.log "url result: #{url}"
+		console.log "url: #{url}"
 		if _.isUndefined headeropts
 			headeropts = 
 				headers:
@@ -30,6 +30,14 @@ module.exports  = (opts = {}) ->
 					createTime: task.createTime
 				return record
 
+	getXML = (url) ->
+		opts = 
+			headers:
+				Authorization:	"Basic " + new Buffer("#{opts.username}:#{opts.password}").toString("base64")
+			parse: 'XML'
+			
+		req 'get', url, {}, opts
+	
 	#
 	taskFilter = (task, username) ->
 		ret = []
@@ -58,19 +66,9 @@ module.exports  = (opts = {}) ->
 		req 'get', url, {}, headeropts
 					
 	definition:
-
-		read: (deploymentId) ->
-			req 'get', "#{opts.serverurl}/repository/deployments/#{deploymentId}/resources"
-				.then (processdefList) ->
-					result = _.findWhere(processdefList.body,{type: 'processDefinition'})
-					getXML "#{opts.serverurl}/repository/deployments/#{deploymentId}/resourcedata/#{result.id}"
-				.then (stream) ->
-					return stream.raw
-				.catch (err) ->
-					console.log "downloadXML err: #{err}"
-					return err
-	
-		create: (data) ->
+		create: (fs) ->
+			data = 
+				file: { file: fs, content_type: 'multipart/form-data' }
 			headeropts = 
 				headers:
 					Authorization:	"Basic " + new Buffer("#{sails.config.activiti.username}:#{sails.config.activiti.password}").toString("base64")
@@ -78,10 +76,13 @@ module.exports  = (opts = {}) ->
 				multipart: true
 						
 			req 'post', "#{opts.serverurl}/repository/deployments/", data, headeropts
-	
-		getID: (deploymentId) ->
+
+		findbyDepId: (deploymentId) ->
 			req 'get', "#{opts.serverurl}/repository/process-definitions?deploymentId=#{deploymentId}&sort=id"
-		
+
+		delete: (deploymentId) ->
+			req 'delete', "#{opts.serverurl}/repository/deployments/#{deploymentId}"
+					
 		diagram: (deploymentId) ->	
 			req 'get', "#{opts.serverurl}/repository/deployments/#{deploymentId}/resources"
 				.then (processdefList) ->
@@ -92,9 +93,6 @@ module.exports  = (opts = {}) ->
 				.catch (err) ->
 					console.log "def diagram err: #{err}"
 					Promise.reject err
-
-		delete: (deploymentId) ->
-			req 'delete', "#{opts.serverurl}/repository/deployments/#{deploymentId}"
 																					
 		list: (pageno) ->
 			req 'get', "#{opts.serverurl}/repository/process-definitions?category=http://activiti.org/test&start=#{pageno}"
@@ -108,20 +106,20 @@ module.exports  = (opts = {}) ->
 				.catch (err) ->
 					console.log "list err: #{err}"
 					Promise.reject err
-
+					
+		getXML: (deploymentId) ->
+			req 'get', "#{opts.serverurl}/repository/deployments/#{deploymentId}/resources"
+				.then (processdefList) ->
+					result = _.findWhere(processdefList.body,{type: 'processDefinition'})
+					getXML "#{opts.serverurl}/repository/deployments/#{deploymentId}/resourcedata/#{result.id}"
+				.then (stream) ->
+					return stream.raw
+				.catch (err) ->
+					console.log "downloadXML err: #{err}"
+					Promise.reject err
+					
 	instance:
-		
-		delhistoryProc: (procInsId) ->
-			req 'delete', "#{opts.serverurl}/history/historic-process-instances/#{procInsId}"
-				
-		delete: (procInsId) ->
-			req 'delete', "#{opts.serverurl}/runtime/process-instances/#{procInsId}"
-
-		haveTask: (defId) ->
-			data =
-				processDefinitionId: defId			
-			req 'post', "#{opts.serverurl}/query/process-instances", data
-							
+		#Start a process instance
 		create: (processdefID, user) ->
 			data = 
 				processDefinitionId: processdefID
@@ -141,7 +139,13 @@ module.exports  = (opts = {}) ->
 					return rst				
 				.catch (err) ->
 					console.log "start err: #{err}"
-					Promise.reject err	
+					Promise.reject err
+				
+		delete: (procInsId) ->
+			req 'delete', "#{opts.serverurl}/runtime/process-instances/#{procInsId}"
+
+		deleteHistory: (procInsId) ->
+			req 'delete', "#{opts.serverurl}/history/historic-process-instances/#{procInsId}"
 
 		diagram: (procInsId) ->
 			getDiagram "#{opts.serverurl}/runtime/process-instances/#{procInsId}/diagram"
@@ -149,18 +153,12 @@ module.exports  = (opts = {}) ->
 					return stream.raw
 				.catch (err) ->
 					console.log "ins diagram err: #{err}"
-					return err	
+					Promise.reject err	
 
-		historyProclist: (pageno, procInsId) ->
-			req 'get', "#{opts.serverurl}/history/historic-process-instances?includeProcessVariables=true&finished=true&start=#{pageno}"
-				.then (result) ->
-					val =
-						count:		result.body.total
-						results:	result.body.data
-					return val
-				.catch (err) ->
-					console.log "historyProclist err: #{err}"
-					return err
+		haveTask: (defId) ->
+			data =
+				processDefinitionId: defId			
+			req 'post', "#{opts.serverurl}/query/process-instances", data
 										
 		#user involved instance
 		list: (user, pageno) ->
@@ -175,14 +173,24 @@ module.exports  = (opts = {}) ->
 						return val
 				.catch (err) ->
 					console.log "list err: #{err}"
-					return err			
-					
+					Promise.reject err			
+
+		listHistory: (pageno) ->
+			req 'get', "#{opts.serverurl}/history/historic-process-instances?includeProcessVariables=true&finished=true&start=#{pageno}"
+				.then (result) ->
+					val =
+						count:		result.body.total
+						results:	result.body.data
+					return val
+				.catch (err) ->
+					console.log "historyProclist err: #{err}"
+					Promise.reject err
+										
 	task:
-		#complete 
 		update: (taskId, data) ->
 			req 'post', "#{opts.serverurl}/runtime/tasks/#{taskId}", data
 
-		historyTasklist: (procInsId, pageno) ->
+		listHistory: (procInsId, pageno) ->
 			req 'get', "#{opts.serverurl}/history/historic-task-instances?processInstanceId=#{procInsId}&includeTaskLocalVariables=true&includeProcessVariables=true&start=#{pageno}"
 				.then (result) ->
 					val =
@@ -191,5 +199,5 @@ module.exports  = (opts = {}) ->
 					return val
 				.catch (err) ->
 					console.log "historyTasklist err: #{err}"
-					return err			
+					Promise.reject err			
 									     		     
