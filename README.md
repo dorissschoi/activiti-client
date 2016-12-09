@@ -16,25 +16,26 @@ env = require('../env.coffee')
 activiti = require('../index')(env)
 ```
 ## API
-- activiti.definition.create <filestream>
-- activiti.definition.delete <deploymentId>
-- activiti.definition.diagram <deploymentId>
-- activiti.definition.findbyDepId <deploymentId>
-- activiti.definition.getXML <deploymentId>
-- activiti.definition.list <pageno>
-- activiti.instance.create <processdefinitionId> <user>
-- activiti.instance.delete <processInstanceId>
-- activiti.instance.deleteHistory <processInstanceId>
-- activiti.instnace.diagram <processInstanceId>
-- activiti.instance.haveTask <definitionId>
-- activiti.instance.list <user> <pageno>
-- activiti.instance.listHistory <pageno>
-- activiti.task.update <TaskId> <data>
+- activiti.definition.create *filestream*
+- activiti.definition.delete *deploymentId*
+- activiti.definition.diagram *deploymentId*
+- activiti.definition.findbyDepId *deploymentId*
+- activiti.definition.getXML *deploymentId*
+- activiti.definition.list *pageno*
+- activiti.instance.create: *processdefinitionId* *user*
+- activiti.instance.delete *processInstanceId*
+- activiti.instance.deleteHistory *processInstanceId*
+- activiti.instnace.diagram *processInstanceId*
+- activiti.instance.haveTask *definitionId*
+- activiti.instance.list *user* *pageno*
+- activiti.instance.listHistory *pageno*
+- activiti.task.update *TaskId* *data*
+> **data**: 
 ```
---data
 "action" : "complete"
-"variables" : [{name: '', value: ''}]
+"variables" : []
 ```
+
 - activiti.task.listHistory <instanceId> <pageno>
 			
 ## Tests
