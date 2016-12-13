@@ -161,7 +161,7 @@ module.exports  = (opts = {}) ->
 			req 'post', "#{opts.serverurl}/query/process-instances", data
 										
 		#user involved instance
-		list: (user, pageno) ->
+		listUser: (user, pageno) ->
 			req 'get', "#{opts.serverurl}/runtime/process-instances?includeProcessVariables=true&start=#{pageno}"
 				.then (task) ->
 					ret = taskFilter task, user.username
@@ -175,6 +175,20 @@ module.exports  = (opts = {}) ->
 					console.log "list err: #{err}"
 					Promise.reject err			
 
+		list: (pageno) ->
+			req 'get', "#{opts.serverurl}/runtime/process-instances?includeProcessVariables=true&start=#{pageno}"
+				.then (task) ->
+					Promise.all  _.map task.body.data, getInstanceDetail
+					.then (result) ->
+						val =
+							count:		task.body.total
+							results:	result
+						console.log "listall : #{JSON.stringify val}"	
+						return val
+				.catch (err) ->
+					console.log "listall err: #{err}"
+					Promise.reject err		
+					
 		listHistory: (pageno) ->
 			req 'get', "#{opts.serverurl}/history/historic-process-instances?includeProcessVariables=true&finished=true&start=#{pageno}"
 				.then (result) ->
