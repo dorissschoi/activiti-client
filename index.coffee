@@ -38,26 +38,6 @@ module.exports  = (opts = {}) ->
 			
 		req 'get', url, {}, opts
 	
-	#
-	taskFilter = (task, username) ->
-		ret = []
-		_.each task.body.data, (record) ->
-			myproc = _.union( 
-				_.where(record.variables, {name: "createdBy", value: username}),
-				_.where(record.variables, {name: "ao", value: username}),
-				_.where(record.variables, {name: "ro", value: username}) 
-			)
-			nextHandler = _.findWhere(record.variables, {name: "nextHandler"})
-			createdAt = _.findWhere(record.variables, {name: "createdAt"})
-			_.extend record,
-				nextHandler: nextHandler.value
-				createdAt: createdAt.value					
-			if myproc.length > 0
-				_.extend record,
-					includeMe: true
-			ret.push record
-		return ret
-				
 	getDiagram = (url) ->
 		headeropts = 
 			headers:
@@ -117,6 +97,9 @@ module.exports  = (opts = {}) ->
 				.catch (err) ->
 					console.log "downloadXML err: #{err}"
 					Promise.reject err
+		
+		suspend: (processdefID) ->
+			req 'put', "#{opts.serverurl}/repository/process-definitions/#{processdefID}"	
 					
 	instance:
 		#Start a process instance
@@ -160,21 +143,6 @@ module.exports  = (opts = {}) ->
 				processDefinitionId: defId			
 			req 'post', "#{opts.serverurl}/query/process-instances", data
 										
-		#user involved instance
-		listUser: (user, pageno) ->
-			req 'get', "#{opts.serverurl}/runtime/process-instances?includeProcessVariables=true&start=#{pageno}"
-				.then (task) ->
-					ret = taskFilter task, user.username
-					Promise.all  _.map ret, getInstanceDetail
-					.then (result) ->
-						val =
-							count:		task.body.total
-							results:	result
-						return val
-				.catch (err) ->
-					console.log "list err: #{err}"
-					Promise.reject err			
-
 		list: (pageno) ->
 			req 'get', "#{opts.serverurl}/runtime/process-instances?includeProcessVariables=true&start=#{pageno}"
 				.then (task) ->
@@ -213,5 +181,38 @@ module.exports  = (opts = {}) ->
 					return val
 				.catch (err) ->
 					console.log "historyTasklist err: #{err}"
-					Promise.reject err			
-									     		     
+					Promise.reject err
+					
+		list: (pageno) ->
+			req 'get', "#{opts.serverurl}/runtime/tasks?includeProcessVariables=true&includeTaskLocalVariables=true&active=true"					
+		
+		
+		findbyVariable: (inName, inValue, pageno) ->
+			data =
+				"taskVariables": [{"name": inName, "value": inValue, "operation": "equals", "type": "string"}]
+			req 'post', "#{opts.serverurl}/query/tasks?&start=#{pageno}", data
+				.then (result) ->
+					val =
+						count:		result.body.total
+						results:	result.body.data
+					#console.log "findbyVariable val: #{JSON.stringify val}"	
+					return val
+				.catch (err) ->
+					console.log "findbyVariable err: #{err}"
+					Promise.reject err
+
+		findHistorybyVariable: (inName, inValue, pageno) ->
+			data =
+				"processFinished" : "false"
+				"taskVariables": [{"name": inName, "value": inValue, "operation": "equals", "type": "string"}]
+			req 'post', "#{opts.serverurl}/query/historic-task-instances?start=#{pageno}", data
+				.then (result) ->
+					console.log "*** val: #{JSON.stringify result.body}"
+					val =
+						count:		result.body.total
+						results:	result.body.data
+					#console.log "findHistorybyVariable val: #{JSON.stringify val}"
+					return val
+				.catch (err) ->
+					console.log "findHistorybyVariable err: #{err}"
+					Promise.reject err									     		     
