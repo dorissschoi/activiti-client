@@ -98,8 +98,8 @@ module.exports  = (opts = {}) ->
 					console.log "downloadXML err: #{err}"
 					Promise.reject err
 		
-		suspend: (processdefID) ->
-			req 'put', "#{opts.serverurl}/repository/process-definitions/#{processdefID}"	
+		suspend: (processdefID, data) ->
+			req 'put', "#{opts.serverurl}/repository/process-definitions/#{processdefID}", data	
 					
 	instance:
 		#Start a process instance
@@ -146,12 +146,13 @@ module.exports  = (opts = {}) ->
 		list: (pageno) ->
 			req 'get', "#{opts.serverurl}/runtime/process-instances?includeProcessVariables=true&start=#{pageno}"
 				.then (task) ->
+					#console.log "listall 1: #{JSON.stringify task.body.data}"
 					Promise.all  _.map task.body.data, getInstanceDetail
 					.then (result) ->
 						val =
 							count:		task.body.total
 							results:	result
-						console.log "listall : #{JSON.stringify val}"	
+						#console.log "listall : #{JSON.stringify val}"	
 						return val
 				.catch (err) ->
 					console.log "listall err: #{err}"
@@ -207,7 +208,6 @@ module.exports  = (opts = {}) ->
 				"taskVariables": [{"name": inName, "value": inValue, "operation": "equals", "type": "string"}]
 			req 'post', "#{opts.serverurl}/query/historic-task-instances?start=#{pageno}", data
 				.then (result) ->
-					console.log "*** val: #{JSON.stringify result.body}"
 					val =
 						count:		result.body.total
 						results:	result.body.data
